@@ -10,4 +10,7 @@ wheels/
 .venv
 
 # Data directory
-data/
+*.csv
+
+# PySwarms report logs.
+*report.log
