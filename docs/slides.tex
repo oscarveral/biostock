@@ -154,6 +154,7 @@
         Si $\|\mathbf{x}\|_1 \neq m$, sustituye la diversidad
         por una penalización positiva.
         Permite explorar soluciones no factibles.
+        \\
         \vspace{8pt}
         \textbf{AE2 - Reparación}\\
         Antes de evaluar, ajusta el cromosoma para que
@@ -173,7 +174,7 @@
 \begin{frame}{AE1: Penalización vs.\ AE2: Reparación}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
-      \begin{block}{AE1: External Feasibility First}
+      \begin{block}{AE1: Penalización}
         \[
           F_{\text{AE1}}(\mathbf{x}) =
           \begin{cases}
@@ -195,9 +196,8 @@
           \item Evaluar el cromosoma reparado.
         \end{enumerate}
         \begin{itemize}
-          \item Convergencia más estable desde el inicio.
-          \item Reparación aleatoria puede destruir
-                buenas estructuras parciales.
+          \item Búsqueda siempre dentro del espacio factible.
+          \item Convergencia más estable y reproducible.
         \end{itemize}
       \end{block}
     \end{column}
@@ -274,9 +274,9 @@
         \toprule
         Escenario & AE1 & AE2 & $p$-value \\
         \midrule
-        Pequeña      & \textbf{40.74} & 39.92 & 0.0020* \\
-        Mediana      & \textbf{92.14} & 90.38 & 0.0039* \\
-        Institucional & \textbf{161.51} & 160.74 & 0.1934 \\
+        Pequeña       & 40.74 & \textbf{41.13} & 0.0020* \\
+        Mediana       & 91.68 & \textbf{93.87} & 0.0020* \\
+        Institucional & 162.49 & \textbf{167.40} & 0.0020* \\
         \bottomrule
       \end{tabular}
       {\footnotesize * diferencia estadísticamente significativa ($p<0{,}05$)}
@@ -286,24 +286,22 @@
         \toprule
         Algoritmo & Victorias & Sig.\ \\
         \midrule
-        AE1 (Penalización) & 3/3 & 2 \\
-        AE2 (Reparación)   & 0/3 & 0 \\
+        AE1 (Penalización) & 0/3 & 0 \\
+        AE2 (Reparación)   & 3/3 & 3 \\
         \bottomrule
       \end{tabular}
     \end{column}
     \begin{column}{0.48\textwidth}
       \begin{alertblock}{Conclusión principal}
-        AE1 supera a AE2 en los tres escenarios. Las diferencias
-        son significativas en carteras pequeñas y medianas.
-        En la institucional, el espacio de búsqueda es tan grande
-        que ningún AE llega al óptimo global y la diferencia
-        deja de ser significativa.
+        AE2 (reparación) supera a AE1 en los tres escenarios,
+        con diferencias significativas en todos ($p=0{,}0020$).
       \end{alertblock}
       \begin{block}{Interpretación}
-        La penalización permite mayor exploración, descubriendo
-        combinaciones de acciones descorrelacionadas que la
-        reparación aleatoria no alcanza. AE1 sacrifica
-        feasibilidad inicial a cambio de mejor calidad final.
+        La reparación restringe la búsqueda al espacio factible
+        desde el inicio: converge a mayor diversidad y con mucha
+        menor varianza entre runs (std $0{,}04$--$0{,}14$ frente a
+        $0{,}17$--$1{,}23$ de la penalización). La penalización
+        malgasta evaluaciones escapando de soluciones no factibles.
       \end{block}
     \end{column}
   \end{columns}
@@ -316,13 +314,14 @@
       \textbf{Lo que muestran las curvas}
       \begin{itemize}
         \item \textcolor{primaryblue}{\textbf{Azul (AE1):}} arranca
-              lento (explora infeasibles), pero converge a
-              mayor diversidad final.
+              muy bajo (la población inicial casi nunca es factible),
+              trepa al entrar en la región factible y se queda en
+              diversidad algo menor, con más varianza entre runs.
         \item \textcolor{accentorange}{\textbf{Naranja (AE2):}}
-              muy estable desde el inicio, pero se queda
-              en óptimos locales.
-        \item La varianza entre runs crece con $n$
-              (mayor incertidumbre en espacios grandes).
+              factible desde el inicio; converge suave a la
+              \alert{mayor diversidad} y casi sin dispersión.
+        \item Resultado consistente en los tres tamaños:
+              la reparación domina a la penalización.
       \end{itemize}
     \end{column}
     \begin{column}{0.60\textwidth}
@@ -358,60 +357,27 @@
         el riesgo de pérdidas absolutas.
 
         \vspace{4pt}
-        Una cartera muy descorrelacionada puede caer fuerte
-        si cada acción reacciona de forma diferente ante
-        un shock sistémico (ej.\ COVID-19 en 2020).
+        Concentrar la cartera en solo $m$ activos sacrifica la
+        diversificación que aporta el \emph{número} de posiciones
+        y eleva el riesgo idiosincrático.
       \end{alertblock}
 
       \vspace{6pt}
       \begin{block}{Hipótesis a validar}
-        AE1 (mayor diversidad financiera) $\Rightarrow$
-        menor volatilidad y drawdown en el backtest.
+        Cartera de máxima descorrelación $\Rightarrow$ ¿menor
+        volatilidad y drawdown que el benchmark amplio?
       \end{block}
     \end{column}
   \end{columns}
 \end{frame}
 
-% --- Backtest - cartera pequeña -------------------------
-\begin{frame}{Backtest - Cartera Pequeña ($n=100$, $m=10$)}
-  \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
-      \textbf{Observaciones}
-      \begin{itemize}
-        \item AE1 selecciona acciones muy específicas del
-              periodo 2014-2018: sobreajuste pronunciado.
-        \item La poca cardinalidad ($m=10$) amplifica la
-              volatilidad de cada acción individual.
-        \item AE2 actúa aquí como \emph{regularizador}:
-              la reparación aleatoria introduce activos que,
-              aunque menos descorrelacionados, son más estables.
-        \item Los picos de drawdown son similares entre
-              ambos enfoques, con ventaja puntual de AE2.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.45\textwidth}
-      \includegraphics[width=\linewidth]{img/corr_backtest_pequena.png}
-    \end{column}
-  \end{columns}
-\end{frame}
-
 % --- Backtest - cartera institucional -------------------
-\begin{frame}{Backtest - Cartera Institucional ($n=200$, $m=20$)}
+\begin{frame}{Backtest}
   \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
-      \textbf{Observaciones}
-      \begin{itemize}
-        \item Con $m=20$ activos la ventaja de AE1 es más
-              clara: menor volatilidad rolling consistente.
-        \item El drawdown de AE1 es generalmente más
-              contenido que el de AE2.
-        \item Ambas carteras sufren el shock de COVID-19
-              (febrero-marzo 2020), igual que el benchmark.
-        \item La diversificación reduce la correlación
-              pero no inmuniza ante eventos sistémicos.
-      \end{itemize}
+    \begin{column}{0.5\textwidth}
+       \includegraphics[width=\linewidth]{img/corr_backtest_pequena.png}
     \end{column}
-    \begin{column}{0.45\textwidth}
+    \begin{column}{0.5\textwidth}
       \includegraphics[width=\linewidth]{img/corr_backtest_institucional.png}
     \end{column}
   \end{columns}
@@ -423,30 +389,24 @@
     \begin{column}{0.48\textwidth}
       \textbf{Hallazgos algorítmicos}
       \begin{enumerate}
-        \item La \alert{penalización} supera a la \alert{reparación}
+        \item La \alert{reparación} supera a la \alert{penalización}
               en calidad de solución, confirmado estadísticamente
-              en 2 de 3 escenarios.
-        \item El elitismo asegura convergencia monótona sin
-              sacrificar diversidad poblacional.
-        \item En alta dimensión ($n=200$), la ventaja de AE1
-              se reduce: el espacio es tan grande que ambos AEs
-              quedan lejos del óptimo global.
+              en los 3 escenarios ($p=0{,}0020$).
+        \item AE2 converge además con varianza mínima entre runs:
+              es más robusto y reproducible.
       \end{enumerate}
     \end{column}
     \begin{column}{0.48\textwidth}
       \textbf{Hallazgos financieros}
       \begin{enumerate}
         \item Maximizar descorrelación \emph{no} implica minimizar
-              el riesgo de pérdidas absolutas.
-        \item En carteras grandes, AE1 produce mejores
-              métricas de riesgo en el backtest.
-        \item En carteras pequeñas, la reparación aleatoria
-              de AE2 actúa como regularizador involuntario.
+              el riesgo: ambas carteras optimizadas son \alert{más
+              volátiles} que el benchmark amplio.
+        \item Reducir a $m$ activos anula la diversificación por
+              número de posiciones y eleva el riesgo idiosincrático.
+        \item No hay diferencia sistemática AE1 vs AE2 en el
+              backtest: lo domina la concentración de la cartera.
       \end{enumerate}
-      \begin{block}{Trabajo futuro}
-        Combinar maximización de diversidad con restricciones
-        de rendimiento esperado (Markowitz media-varianza).
-      \end{block}
     \end{column}
   \end{columns}
 \end{frame}
@@ -811,7 +771,7 @@
     \begin{column}{0.48\textwidth}
       \begin{block}{PSO Continuo (Sección 1)}
         \begin{tabular}{ll}
-          \textbf{Espacio} & $\mathbb{R}^3$, continuo \\
+          \textbf{Espacio} & $\mathbb{N}^3$, continuo* \\
           \textbf{Dimensiones} & 3 ($p, d, q$) \\
           \textbf{Evaluación} & Ajuste ARIMA + RMSE \\
           \textbf{Coste eval.} & Alto (modelo ARIMA) \\
